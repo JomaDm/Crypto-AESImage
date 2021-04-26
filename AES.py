@@ -16,7 +16,6 @@ class AESImageCipher:
     image_size = None  # Resolucion de la iamgen
     image_ext = None
 
-    aux = None
     # Cipher
     key = None
     iv = None
@@ -68,28 +67,32 @@ class AESImageCipher:
             print("Cifrando...")
             img = Image.open(self.url)
             self.image = np.array(img)
+            print(len(self.image))
             self.image_size = img.size
-
+            print(self.key, self.iv)
             new_url = self.path + self.image_name + "_e" + self.getMode() + "." + self.image_ext
-            cipher = AES.new(self.key, self.mode, self.iv)
+
+            cipher = None
+            if(self.getMode() != "ECB"):
+                cipher = AES.new(self.key, self.mode, iv=self.iv)
+            else:
+                cipher = AES.new(self.key, self.mode)
 
             ct_bytes = cipher.encrypt(
                 pad(
                     self.image.tobytes(),
-                    AES.block_size
+                    AES.block_size,
                 )
             )
-            print(len(ct_bytes))
-            # print(type(ct_bytes))
-            # self.aux = ct_bytes
-            # print(ct_bytes)
             img_data = np.frombuffer(ct_bytes)
+            print(len(img_data))
 
-            Image.frombuffer(
+            image_nva = Image.frombuffer(
                 "RGB",
                 self.image_size,
                 img_data
-            ).save(
+            )
+            image_nva.save(
                 new_url
             )
             print("Cifrado")
@@ -102,16 +105,24 @@ class AESImageCipher:
             self.image_size = img.size
 
             new_url = self.path + self.image_name + "_d" + self.getMode() + "." + self.image_ext
-            cipher = AES.new(self.key, self.mode, self.iv)
+            cipher = None
+            if(self.getMode() != "ECB"):
+                cipher = AES.new(self.key, self.mode, iv=self.iv)
+            else:
+                cipher = AES.new(self.key, self.mode)
 
-            print(len(self.image.tobytes()))
-            pt = unpad(
-                cipher.decrypt(
-                    pad(self.image.tobytes(), AES.block_size)
-                ),
-                AES.block_size
+            aux = self.image.tobytes()
+            # pt = unpad(
+            #     cipher.decrypt(
+            #         self.image.tobytes()
+            #     ),
+            #     AES.block_size
+            # )
+            pt = cipher.decrypt(
+                aux
             )
-            print(len(pt))
+
+            print("PT:  ", len(pt))
 
             img_data = np.frombuffer(pt)
 
@@ -130,18 +141,34 @@ if __name__ == "__main__":
     key = b'Estos son 16 bts'
     iv = b'0123456789ABCDEF'
     cipher = AESImageCipher()
-    cipher.setImagePath('images\koala.jpg')
+    cipher.setImagePath('images\Imagen1.bmp')
     cipher.setKey(key)
     cipher.setIv(iv)
     cipher.setMode("CBC")
     cipher.encrypt()
 
+    cipher2 = AESImageCipher()
+    cipher2.setImagePath('images\Imagen1_eCBC.bmp')
+    cipher2.setKey(key)
+    cipher2.setIv(iv)
+    cipher2.setMode("CBC")
+    cipher2.decrypt()
+
+    key = b'Estos son 16 bts'
+    iv = b'0123456789ABCDEF'
     cipher = AESImageCipher()
-    cipher.setImagePath('images\koala_eCBC.jpg')
+    cipher.setImagePath('images\Imagen2.bmp')
     cipher.setKey(key)
     cipher.setIv(iv)
     cipher.setMode("CBC")
-    cipher.decrypt()
+    cipher.encrypt()
+
+    cipher2 = AESImageCipher()
+    cipher2.setImagePath('images\Imagen2_eCBC.bmp')
+    cipher2.setKey(key)
+    cipher2.setIv(iv)
+    cipher2.setMode("CBC")
+    cipher2.decrypt()
 
     # initial_image = Image.open('images\koala.jpg')
     # size_image = initial_image.size
@@ -152,19 +179,20 @@ if __name__ == "__main__":
     # key = b'Estos son 16 bts'
     # iv = b'0123456789ABCDEF'
 
-    # print(type(key))
     # cipher = AES.new(key, AES.MODE_CBC, iv)
 
     # ct_bytes = cipher.encrypt(pad(data_image.tobytes(), AES.block_size))
-    # print(len(ct_bytes))
+    # print("IMG: ", len(data_image.tobytes()))
+    # print("ENC: ", len(ct_bytes))
     # img_data = np.frombuffer(ct_bytes)
     # Image.frombuffer("RGB", size_image, img_data).save(
     #     'images\koala_encrypted.png')
 
     # # ct = b64encode(ct_bytes).decode('utf-8')
     # cipher = AES.new(key, AES.MODE_CBC, iv)
+    # print("ENC: ", len(ct_bytes))
     # pt = unpad(cipher.decrypt(ct_bytes), AES.block_size)
-    # print(len(pt))
+    # print("PT:  ", len(pt))
     # img_data = np.frombuffer(pt)
     # Image.frombuffer("RGB", size_image, img_data).save(
     #     'images\koala_decrypted.png')
