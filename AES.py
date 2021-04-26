@@ -33,10 +33,10 @@ class AESImageCipher:
         self.path = self.url.replace(aux[-1], "")
 
     def setKey(self, key: bytes):
-        self.key = key
+        self.key = pad(key, 16)
 
     def setIv(self, iv: bytes):
-        self.iv = iv
+        self.iv = pad(iv, 16)
 
     def setMode(self, modo: str):
         if(modo == 'ECB'):
@@ -63,13 +63,13 @@ class AESImageCipher:
             return None
 
     def encrypt(self):
-        if(self.url != None and self.key != None and self.iv != None):
+        if(self.url != None and self.key != None):
             print("Cifrando...")
             img = Image.open(self.url)
             self.image = np.array(img)
-            print(len(self.image))
+            # print(len(self.image))
             self.image_size = img.size
-            print(self.key, self.iv)
+            #print(self.key, self.iv)
             new_url = self.path + self.image_name + "_e" + self.getMode() + "." + self.image_ext
 
             cipher = None
@@ -85,7 +85,7 @@ class AESImageCipher:
                 )
             )
             img_data = np.frombuffer(ct_bytes)
-            print(len(img_data))
+            # print(len(img_data))
 
             image_nva = Image.frombuffer(
                 "RGB",
@@ -98,7 +98,7 @@ class AESImageCipher:
             print("Cifrado")
 
     def decrypt(self):
-        if(self.url != None and self.key != None and self.iv != None):
+        if(self.url != None and self.key != None):
             print("Decifrando...")
             img = Image.open(self.url)
             self.image = np.array(img)
@@ -122,7 +122,7 @@ class AESImageCipher:
                 aux
             )
 
-            print("PT:  ", len(pt))
+            #print("PT:  ", len(pt))
 
             img_data = np.frombuffer(pt)
 
@@ -133,7 +133,7 @@ class AESImageCipher:
             ).save(
                 new_url
             )
-            print("Decifrado")
+            # print("Decifrado")
 
 
 if __name__ == "__main__":
